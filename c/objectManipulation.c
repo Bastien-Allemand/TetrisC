@@ -1,6 +1,85 @@
 #include "../header/objectManipulation.h"
 #include <stdlib.h>
 
+static bool isRowComplete(const shape* settled_shape, int row, int width)
+{
+    bool* occupied = calloc((size_t)width, sizeof(*occupied));
+    if (occupied == NULL)
+    {
+        return false;
+    }
+
+    int occupied_count = 0;
+    for (int i = 0; i < settled_shape->count; i++)
+    {
+        int x = settled_shape->form[i].x;
+        if (settled_shape->form[i].y == row && x >= 0 && x < width &&
+            !occupied[x])
+        {
+            occupied[x] = true;
+            occupied_count++;
+        }
+    }
+
+    free(occupied);
+    return occupied_count == width;
+}
+
+int clearCompletedRows(shape* settled_shape, grid* board)
+{
+    if (settled_shape == NULL || settled_shape->form == NULL ||
+        board == NULL || board->width <= 0 || board->length <= 0)
+    {
+        return 0;
+    }
+
+    int cleared_rows = 0;
+    for (int row = 0; row < board->length; row++)
+    {
+        if (!isRowComplete(settled_shape, row, board->width))
+        {
+            continue;
+        }
+
+        int write_index = 0;
+        for (int read_index = 0; read_index < settled_shape->count;
+             read_index++)
+        {
+            square current = settled_shape->form[read_index];
+            if (current.y == row)
+            {
+                continue;
+            }
+
+            if (current.y > row)
+            {
+                current.y--;
+            }
+            settled_shape->form[write_index++] = current;
+        }
+        settled_shape->count = write_index;
+        cleared_rows++;
+        row--;
+    }
+
+    if (settled_shape->count == 0)
+    {
+        free(settled_shape->form);
+        settled_shape->form = NULL;
+    }
+    else
+    {
+        square* resized = realloc(
+            settled_shape->form,
+            (size_t)settled_shape->count * sizeof(*settled_shape->form));
+        if (resized != NULL)
+        {
+            settled_shape->form = resized;
+        }
+    }
+    return cleared_rows;
+}
+
 void rotation(bool dir, shape* current_shape)
 {
     if (current_shape == NULL || current_shape->form == NULL ||
@@ -66,38 +145,37 @@ void moveRight(shape* current_shape)
     }
 }
 
-void fusion(shape* shape1, shape* shape2)
+void fusion(shape* to, shape* from)
 {
-    if (shape1 == NULL || shape2 == NULL || shape1 == shape2 ||
-        shape1->form == NULL || shape2->form == NULL ||
-        shape1->count < 0 || shape2->count < 0)
+    if (to == NULL || from == NULL || to == from ||
+        from->form == NULL ||
+        to->count < 0 || from->count < 0)
     {
         return;
     }
 
-    int newCount = shape1->count + shape2->count;
-    square* newForm = realloc(shape1->form, (size_t)newCount * sizeof(square));
+    int newCount = to->count + from->count;
+    square* newForm = realloc(to->form, (size_t)newCount * sizeof(*newForm));
     if (newForm == NULL)
     {
         return;
     }
 
-    for (int i = 0; i < shape2->count; i++)
+    for (int i = 0; i < from->count; i++)
     {
-        newForm[shape1->count + i] = shape2->form[i];
+        newForm[to->count + i] = from->form[i];
     }
 
-    free(shape2->form);
-    shape1->form = newForm;
-    shape1->count = newCount;
-    shape2->form = NULL;
-    shape2->count = 0;
+    free(from->form);
+    to->form = newForm;
+    to->count = newCount;
+    from->form = NULL;
+    from->count = 0;
 }
 
 bool hitbottom(shape* current_shape, grid* board)
 {
-    if (current_shape == NULL || current_shape->form == NULL ||
-        board == NULL || board->cases == NULL)
+    if (!canPlaceShape(current_shape, board))
     {
         return true;
     }
@@ -105,18 +183,37 @@ bool hitbottom(shape* current_shape, grid* board)
     for (int i = 0; i < current_shape->count; i++)
     {
         int x = current_shape->form[i].x;
-        int y = current_shape->form[i].y;
-
-        if (y < 0 || y >= board->length || x < 0 || x >= board->width ||
-            board->cases[y] == NULL)
+        int next_y = current_shape->form[i].y - 1;
+        if (next_y < 0)
         {
             return true;
         }
-
-        if (!board->cases[y][x].isEmpty)
+        if (next_y < board->length &&
+            !board->cases[next_y][x].isEmpty)
         {
             return true;
         }
     }
     return false;
+}
+
+bool canPlaceShape(const shape* current_shape, const grid* board)
+{
+    if (current_shape == NULL || current_shape->form == NULL ||
+        board == NULL || board->cases == NULL)
+    {
+        return false;
+    }
+
+    for (int i = 0; i < current_shape->count; i++)
+    {
+        int x = current_shape->form[i].x;
+        int y = current_shape->form[i].y;
+        if (x < 0 || x >= board->width || y < 0 || y >= board->length ||
+            board->cases[y] == NULL || !board->cases[y][x].isEmpty)
+        {
+            return false;
+        }
+    }
+    return true;
 }

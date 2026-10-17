@@ -42,7 +42,7 @@ void resetGrid(grid* board)
     }
 }
 
-void displayGrid(grid* board)
+void displayGrid(grid* board, int score)
 {
     if (board == NULL || board->cases == NULL)
     {
@@ -65,5 +65,6 @@ void displayGrid(grid* board)
         }
         printf("\n");
     }
+    printf("Score: %d\n", score);
     
 }

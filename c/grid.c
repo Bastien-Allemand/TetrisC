@@ -19,6 +19,25 @@ bool checkRowComplete(grid* board, int row)
     return true;
 }
 
+void clearRow(grid* board, int row)
+{
+    if (board == NULL || board->cases == NULL || row < 0 ||
+        row >= board->length || board->cases[row] == NULL)
+    {
+        return;
+    }
+
+    for (int i = 0; i < board->width; i++)
+    {
+        if (board->cases[row][i].square != NULL)
+        {
+            free(board->cases[row][i].square);
+            board->cases[row][i].square = NULL;
+        }
+        board->cases[row][i].isEmpty = true;
+    }
+}
+
 grid* generateGrid(int length, int width)
 {
     if (length <= 0 || width <= 0)

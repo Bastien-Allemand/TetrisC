@@ -11,6 +11,8 @@ void moveDown(shape* current_shape);
 void moveLeft(shape* current_shape);
 void moveRight(shape* current_shape);
 void fusion(shape* shape1, shape* shape2);
+bool canPlaceShape(const shape* current_shape, const grid* board);
 bool hitbottom(shape* current_shape, grid* board);
+int clearCompletedRows(shape* settled_shape, grid* board);
 
 #endif

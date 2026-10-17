@@ -1,5 +1,5 @@
-#ifndef TETRIS_OBJECT_H
-#define TETRIS_OBJECT_H
+#pragma once
+#include <stdbool.h>
 
 typedef struct square
 {
@@ -25,6 +25,5 @@ typedef struct
     int count;
     square* form;
     TYPE type;
+    bool set;
 }shape;
-
-#endif

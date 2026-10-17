@@ -6,6 +6,6 @@
 
 void SetShapeInGrid(shape* current_shape, grid* board);
 void resetGrid(grid* board);
-void displayGrid(grid* board);
+void displayGrid(grid* board, int score);
 
 #endif
